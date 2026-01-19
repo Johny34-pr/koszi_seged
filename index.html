@@ -413,7 +413,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📚 Közelítő és Szimbolikus Számítások</h1>
+        <h1>📚 Közelítő és Szimbolikus Számítások - Vizsga Segéd</h1>
         
         <div class="search-box">
             <div class="pdf-info" id="pdfInfo">
@@ -428,10 +428,13 @@
             </div>
             
             <div class="tetel-selector">
-                <div class="tetel-selector-title">📋 Válassz tételt (opcionális):</div>
+                <div class="tetel-selector-title">🎲 Válaszd ki a 2 kihúzott tételt:</div>
                 <div class="tetel-grid" id="tetelGrid"></div>
                 <div class="tetel-info" id="tetelInfo" style="display: none;"></div>
-                <button class="clear-tetel-btn" id="clearTetelBtn" style="display: none;" onclick="clearSelectedTetel()">✖ Tétel szűrő törlése</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <button class="clear-tetel-btn" id="clearTetelBtn" style="display: none;" onclick="clearSelectedTetel()">✖ Tételek törlése</button>
+                    <button class="clear-tetel-btn" id="randomTetelBtn" style="background: #4caf50;" onclick="randomTetelek()">🎲 Véletlenszerű 2 tétel</button>
+                </div>
             </div>
             
             <div class="api-key-section">
@@ -471,7 +474,7 @@
         let currentPage = 0;
         let totalPages = 0;
         let tetelek = [];
-        let selectedTetel = null;
+        let selectedTetelek = []; // Több tétel támogatása
 
         // Tételek betöltése
         async function loadTetelek() {
@@ -488,59 +491,102 @@
         function renderTetelGrid() {
             const grid = document.getElementById('tetelGrid');
             grid.innerHTML = tetelek.map(t => `
-                <button class="tetel-btn" data-id="${t.id}" onclick="selectTetel(${t.id})" title="${t.cim}">
+                <button class="tetel-btn" data-id="${t.id}" onclick="toggleTetel(${t.id})" title="${t.cim}">
                     ${t.id}
                 </button>
             `).join('');
         }
 
-        function selectTetel(id) {
-            selectedTetel = tetelek.find(t => t.id === id);
+        function toggleTetel(id) {
+            const tetel = tetelek.find(t => t.id === id);
+            const index = selectedTetelek.findIndex(t => t.id === id);
             
+            if (index > -1) {
+                // Már ki van választva, eltávolítjuk
+                selectedTetelek.splice(index, 1);
+            } else if (selectedTetelek.length < 2) {
+                // Még nincs 2 kiválasztva, hozzáadjuk
+                selectedTetelek.push(tetel);
+            } else {
+                // Már 2 van kiválasztva, figyelmeztetés
+                setStatus('⚠️ Maximum 2 tételt választhatsz ki!');
+                return;
+            }
+            
+            updateTetelUI();
+        }
+
+        function updateTetelUI() {
             // Gombok frissítése
             document.querySelectorAll('.tetel-btn').forEach(btn => {
                 btn.classList.remove('active');
-                if (parseInt(btn.dataset.id) === id) {
+                if (selectedTetelek.some(t => t.id === parseInt(btn.dataset.id))) {
                     btn.classList.add('active');
                 }
             });
             
             // Info megjelenítése
             const tetelInfo = document.getElementById('tetelInfo');
-            tetelInfo.style.display = 'block';
-            tetelInfo.innerHTML = `<strong>${selectedTetel.id}. tétel:</strong> ${selectedTetel.cim}`;
-            
-            document.getElementById('clearTetelBtn').style.display = 'inline-block';
-            document.getElementById('searchInput').placeholder = `Keresés a ${selectedTetel.id}. tételben...`;
+            if (selectedTetelek.length > 0) {
+                tetelInfo.style.display = 'block';
+                tetelInfo.innerHTML = selectedTetelek.map(t => 
+                    `<div style="margin-bottom: 5px;"><strong>${t.id}. tétel:</strong> ${t.cim}</div>`
+                ).join('');
+                document.getElementById('clearTetelBtn').style.display = 'inline-block';
+                
+                const placeholder = selectedTetelek.length === 1 
+                    ? `Keresés a ${selectedTetelek[0].id}. tételben...`
+                    : `Keresés a ${selectedTetelek[0].id}. és ${selectedTetelek[1].id}. tételben...`;
+                document.getElementById('searchInput').placeholder = placeholder;
+            } else {
+                tetelInfo.style.display = 'none';
+                document.getElementById('clearTetelBtn').style.display = 'none';
+                document.getElementById('searchInput').placeholder = 'Keresés a jegyzetben...';
+            }
+        }
+
+        function selectTetel(id) {
+            // Kompatibilitás a régi kóddal
+            if (!selectedTetelek.some(t => t.id === id)) {
+                toggleTetel(id);
+            }
         }
 
         function clearSelectedTetel() {
-            selectedTetel = null;
-            document.querySelectorAll('.tetel-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('tetelInfo').style.display = 'none';
-            document.getElementById('clearTetelBtn').style.display = 'none';
-            document.getElementById('searchInput').placeholder = 'Keresés a jegyzetben...';
+            selectedTetelek = [];
+            updateTetelUI();
+        }
+
+        function randomTetelek() {
+            selectedTetelek = [];
+            const shuffled = [...tetelek].sort(() => Math.random() - 0.5);
+            selectedTetelek = [shuffled[0], shuffled[1]];
+            updateTetelUI();
+            setStatus(`🎲 Kihúzott tételek: ${selectedTetelek[0].id}. és ${selectedTetelek[1].id}.`);
         }
 
         // Tétel felismerése a kérdésből
         function detectTetelFromQuery(query) {
             // "5. tétel" vagy "tétel 5" vagy "ötödik tétel" mintázatok
             const patterns = [
-                /(\d+)\.\s*tétel/i,
-                /tétel\s*(\d+)/i,
-                /(\d+)-(?:es|as|os|ös)\s*tétel/i
+                /(\d+)\.\s*tétel/gi,
+                /tétel\s*(\d+)/gi,
+                /(\d+)-(?:es|as|os|ös)\s*tétel/gi
             ];
             
+            const foundTetelek = [];
             for (const pattern of patterns) {
-                const match = query.match(pattern);
-                if (match) {
+                let match;
+                while ((match = pattern.exec(query)) !== null) {
                     const tetelId = parseInt(match[1]);
                     const tetel = tetelek.find(t => t.id === tetelId);
-                    if (tetel) return tetel;
+                    if (tetel && !foundTetelek.some(t => t.id === tetelId)) {
+                        foundTetelek.push(tetel);
+                    }
                 }
             }
             
-            return null;
+            return foundTetelek.length > 0 ? foundTetelek : null;
         }
 
         // API kulcs kezelése
@@ -594,7 +640,7 @@
                         'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: 'gpt-4o-mini',
+                        model: 'gpt-4o',
                         messages: [
                             {
                                 role: 'system',
@@ -632,7 +678,7 @@ ${context.substring(0, 8000)}`
         }
         
         // AI hívása kontextussal (releváns oldalakkal)
-        async function askAIWithContext(query, results, activeTetel = null) {
+        async function askAIWithContext(query, results, activeTetelek = []) {
             const apiKey = getApiKey();
             const aiLoading = document.getElementById('aiLoading');
             const aiResponse = document.getElementById('aiResponse');
@@ -656,14 +702,18 @@ ${context.substring(0, 8000)}`
                     relevantContext = pdfText.map(p => `[${p.page}. oldal]: ${p.text.substring(0, 300)}`).join('\n\n');
                 }
                 
-                // Tétel specifikus prompt
+                // Tétel specifikus prompt - több tételt is kezel
                 let tetelContext = '';
-                if (activeTetel) {
+                if (activeTetelek.length > 0) {
+                    const tetelekInfo = activeTetelek.map(t => 
+                        `- ${t.id}. tétel: ${t.cim}\n  Kulcsszavak: ${t.kulcsszavak.join(', ')}`
+                    ).join('\n');
+                    
                     tetelContext = `
-FONTOS: A felhasználó a "${activeTetel.id}. tétel: ${activeTetel.cim}" témakörében kérdez!
-Kulcsszavak ehhez a tételhez: ${activeTetel.kulcsszavak.join(', ')}
+FONTOS: A felhasználó a következő vizsgatétel(ek)ből felel:
+${tetelekInfo}
 
-A válaszodnak KIFEJEZETTEN ehhez a vizsgatételhez kell kapcsolódnia. Ha a kérdés általános, akkor is a "${activeTetel.cim}" kontextusában válaszolj.
+A válaszodnak KIFEJEZETTEN ezekhez a vizsgatételekhez kell kapcsolódnia. Ha a kérdés általános, akkor is ezeknek a tételeknek a kontextusában válaszolj. Ha 2 tétel van, próbálj mindkettőhöz releváns információt adni.
 `;
                 }
                 
@@ -674,7 +724,7 @@ A válaszodnak KIFEJEZETTEN ehhez a vizsgatételhez kell kapcsolódnia. Ha a ké
                         'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: 'gpt-4o-mini',
+                        model: 'gpt-4o',
                         messages: [
                             {
                                 role: 'system',
@@ -896,13 +946,18 @@ ${relevantContext.substring(0, 12000)}`
             }
 
             // Tétel felismerése a kérdésből
-            const detectedTetel = detectTetelFromQuery(query);
-            if (detectedTetel && !selectedTetel) {
-                selectTetel(detectedTetel.id);
+            const detectedTetelek = detectTetelFromQuery(query);
+            if (detectedTetelek && selectedTetelek.length === 0) {
+                detectedTetelek.slice(0, 2).forEach(t => {
+                    if (!selectedTetelek.some(s => s.id === t.id)) {
+                        selectedTetelek.push(t);
+                    }
+                });
+                updateTetelUI();
             }
             
-            // Aktív tétel (kézzel választott vagy automatikusan felismert)
-            const activeTetel = selectedTetel || detectedTetel;
+            // Aktív tételek (kézzel választott vagy automatikusan felismert)
+            const activeTetelek = selectedTetelek.length > 0 ? selectedTetelek : (detectedTetelek || []);
 
             // Kulcsszavak keresése a releváns oldalak megtalálásához
             const results = [];
@@ -910,8 +965,10 @@ ${relevantContext.substring(0, 12000)}`
             let queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
             
             // Ha van aktív tétel, adjuk hozzá annak kulcsszavait
-            if (activeTetel) {
-                queryWords = [...queryWords, ...activeTetel.kulcsszavak.map(k => k.toLowerCase())];
+            if (activeTetelek.length > 0) {
+                activeTetelek.forEach(tetel => {
+                    queryWords = [...queryWords, ...tetel.kulcsszavak.map(k => k.toLowerCase())];
+                });
                 // Távolítsuk el a "tétel" és számokat a kereső szavakból
                 queryWords = queryWords.filter(w => w !== 'tétel' && !/^\d+$/.test(w));
             }
@@ -939,11 +996,11 @@ ${relevantContext.substring(0, 12000)}`
             });
 
             // Mindig az AI válaszol, a találatokat kontextusként használva
-            displayResultsWithAI(results, query, activeTetel);
+            displayResultsWithAI(results, query, activeTetelek);
         }
 
         // Eredmények megjelenítése AI válasszal
-        function displayResultsWithAI(results, query, activeTetel = null) {
+        function displayResultsWithAI(results, query, activeTetelek = []) {
             const resultsBox = document.getElementById('resultsBox');
             const resultsDiv = document.getElementById('results');
             const resultsTitle = document.getElementById('resultsTitle');
@@ -952,18 +1009,26 @@ ${relevantContext.substring(0, 12000)}`
             
             // Tétel info megjelenítése a címben
             let titleHtml = `Kérdés: "<strong>${escapeHtml(query)}</strong>"`;
-            if (activeTetel) {
-                titleHtml += ` <span style="color: #e65100; font-size: 14px;">(${activeTetel.id}. tétel: ${activeTetel.cim})</span>`;
+            if (activeTetelek.length > 0) {
+                const tetelStr = activeTetelek.map(t => `${t.id}. tétel`).join(' és ');
+                titleHtml += ` <span style="color: #e65100; font-size: 14px;">(${tetelStr})</span>`;
             }
             resultsTitle.innerHTML = titleHtml;
             
             // AI válasz szekció
+            const tetelLabel = activeTetelek.length > 0 
+                ? `a ${activeTetelek.map(t => t.id + '.').join(' és ')} tételben` 
+                : 'a jegyzetben';
+            const tetelHeader = activeTetelek.length > 0 
+                ? ` - ${activeTetelek.map(t => t.id + '. tétel').join(' és ')}` 
+                : '';
+            
             let html = `
                 <div class="ai-loading" id="aiLoading">
-                    <span class="spinner"></span> Válasz keresése ${activeTetel ? `a ${activeTetel.id}. tételben` : 'a jegyzetben'} és AI segítséggel...
+                    <span class="spinner"></span> Válasz keresése ${tetelLabel} és AI segítséggel...
                 </div>
                 <div class="ai-response" id="aiResponse" style="display: none;">
-                    <div class="ai-response-header">🤖 AI Válasz${activeTetel ? ` - ${activeTetel.id}. tétel` : ''}</div>
+                    <div class="ai-response-header">🤖 AI Válasz${tetelHeader}</div>
                     <div class="ai-response-text" id="aiResponseText"></div>
                 </div>
             `;
@@ -997,8 +1062,8 @@ ${relevantContext.substring(0, 12000)}`
             
             resultsDiv.innerHTML = html;
             
-            // AI hívása a találatokkal és a tétellel együtt
-            askAIWithContext(query, results, activeTetel);
+            // AI hívása a találatokkal és a tételekkel együtt
+            askAIWithContext(query, results, activeTetelek);
         }
 
         // Kivonat készítése
