@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Közelítő és Szimbolikus Számítások - Vizsga Segéd</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #searchInput {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #searchInput:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-voice {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-voice:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+        }
+
+        .btn-voice.listening {
+            animation: pulse 1s infinite;
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-search:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(245, 87, 108, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 87, 108, 0); }
+        }
+
+        .status {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 20px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .results-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+
+        .result-item:hover {
+            transform: translateX(5px);
+        }
+
+        .result-page {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .result-text mark {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .result-preview {
+            margin-top: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fafafa;
+        }
+
+        .result-preview canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .preview-toggle {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .preview-toggle:hover {
+            background: #764ba2;
+        }
+
+        .ocr-progress {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+
+        .no-results-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .ai-response {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .ai-response-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #7b1fa2;
+            font-weight: bold;
+        }
+
+        .ai-response-text {
+            color: #333;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .ai-loading {
+            text-align: center;
+            padding: 30px;
+            color: #7b1fa2;
+        }
+
+        .api-key-section {
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .api-key-section input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #ffb74d;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .api-key-section input:focus {
+            border-color: #ff9800;
+        }
+
+        .api-key-section button {
+            padding: 10px 20px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .api-key-section button:hover {
+            background: #f57c00;
+        }
+
+        .api-key-status {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .pdf-info {
+            background: #e8f4fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #1976d2;
+        }
+
+        .mic-icon::before {
+            content: "🎤";
+        }
+
+        .search-icon::before {
+            content: "🔍";
+        }
+
+        .tetel-selector {
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tetel-selector-title {
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+
+        .tetel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tetel-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ffb74d;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
+            color: #e65100;
+            transition: all 0.2s;
+        }
+
+        .tetel-btn:hover {
+            background: #fff3e0;
+            transform: scale(1.1);
+        }
+
+        .tetel-btn.active {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            border-color: #f57c00;
+        }
+
+        .tetel-info {
+            font-size: 14px;
+            color: #666;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .tetel-info strong {
+            color: #e65100;
+        }
+
+        .clear-tetel-btn {
+            padding: 8px 16px;
+            background: #9e9e9e;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .clear-tetel-btn:hover {
+            background: #757575;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Közelítő és Szimbolikus Számítások</h1>
+        
+        <div class="search-box">
+            <div class="pdf-info" id="pdfInfo">
+                <span class="spinner"></span> PDF betöltése...
+            </div>
+            
+            <div class="ocr-progress" id="ocrProgress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">OCR feldolgozás...</div>
+            </div>
+            
+            <div class="tetel-selector">
+                <div class="tetel-selector-title">📋 Válassz tételt (opcionális):</div>
+                <div class="tetel-grid" id="tetelGrid"></div>
+                <div class="tetel-info" id="tetelInfo" style="display: none;"></div>
+                <button class="clear-tetel-btn" id="clearTetelBtn" style="display: none;" onclick="clearSelectedTetel()">✖ Tétel szűrő törlése</button>
+            </div>
+            
+            <div class="api-key-section">
+                <span>🤖 OpenAI API kulcs:</span>
+                <input type="password" id="apiKeyInput" placeholder="sk-...">
+                <button onclick="saveApiKey()">Mentés</button>
+                <span class="api-key-status" id="apiKeyStatus"></span>
+            </div>
+            
+            <div class="search-controls">
+                <input type="text" id="searchInput" placeholder="Keresés a PDF-ben...">
+                <button class="btn btn-voice" id="voiceBtn" title="Hangalapú keresés">
+                    <span class="mic-icon"></span> Beszélj
+                </button>
+                <button class="btn btn-search" id="searchBtn">
+                    <span class="search-icon"></span> Keresés
+                </button>
+            </div>
+            
+            <div class="status" id="status"></div>
+        </div>
+
+        <div class="results-box" id="resultsBox" style="display: none;">
+            <div class="results-title" id="resultsTitle"></div>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // PDF.js beállítása
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let pdfText = [];
+        let pdfLoaded = false;
+        let pdfDocument = null;
+        let ocrWorker = null;
+        let currentPage = 0;
+        let totalPages = 0;
+        let tetelek = [];
+        let selectedTetel = null;
+
+        // Tételek betöltése
+        async function loadTetelek() {
+            try {
+                const response = await fetch('tetelek.json');
+                const data = await response.json();
+                tetelek = data.tetelek;
+                renderTetelGrid();
+            } catch (error) {
+                console.error('Tételek betöltési hiba:', error);
+            }
+        }
+
+        function renderTetelGrid() {
+            const grid = document.getElementById('tetelGrid');
+            grid.innerHTML = tetelek.map(t => `
+                <button class="tetel-btn" data-id="${t.id}" onclick="selectTetel(${t.id})" title="${t.cim}">
+                    ${t.id}
+                </button>
+            `).join('');
+        }
+
+        function selectTetel(id) {
+            selectedTetel = tetelek.find(t => t.id === id);
+            
+            // Gombok frissítése
+            document.querySelectorAll('.tetel-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.id) === id) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Info megjelenítése
+            const tetelInfo = document.getElementById('tetelInfo');
+            tetelInfo.style.display = 'block';
+            tetelInfo.innerHTML = `<strong>${selectedTetel.id}. tétel:</strong> ${selectedTetel.cim}`;
+            
+            document.getElementById('clearTetelBtn').style.display = 'inline-block';
+            document.getElementById('searchInput').placeholder = `Keresés a ${selectedTetel.id}. tételben...`;
+        }
+
+        function clearSelectedTetel() {
+            selectedTetel = null;
+            document.querySelectorAll('.tetel-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tetelInfo').style.display = 'none';
+            document.getElementById('clearTetelBtn').style.display = 'none';
+            document.getElementById('searchInput').placeholder = 'Keresés a jegyzetben...';
+        }
+
+        // Tétel felismerése a kérdésből
+        function detectTetelFromQuery(query) {
+            // "5. tétel" vagy "tétel 5" vagy "ötödik tétel" mintázatok
+            const patterns = [
+                /(\d+)\.\s*tétel/i,
+                /tétel\s*(\d+)/i,
+                /(\d+)-(?:es|as|os|ös)\s*tétel/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = query.match(pattern);
+                if (match) {
+                    const tetelId = parseInt(match[1]);
+                    const tetel = tetelek.find(t => t.id === tetelId);
+                    if (tetel) return tetel;
+                }
+            }
+            
+            return null;
+        }
+
+        // API kulcs kezelése
+        const API_KEY_STORAGE = 'openai_api_key';
+        
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (apiKey) {
+                localStorage.setItem(API_KEY_STORAGE, apiKey);
+                document.getElementById('apiKeyInput').value = '';
+                document.getElementById('apiKeyStatus').textContent = '✅ Mentve!';
+                document.getElementById('apiKeyStatus').style.color = '#388e3c';
+            }
+        }
+        
+        function getApiKey() {
+            return localStorage.getItem(API_KEY_STORAGE);
+        }
+        
+        function loadApiKeyStatus() {
+            const key = getApiKey();
+            if (key) {
+                document.getElementById('apiKeyStatus').textContent = '✅ API kulcs beállítva';
+                document.getElementById('apiKeyStatus').style.color = '#388e3c';
+            } else {
+                document.getElementById('apiKeyStatus').textContent = '⚠️ Nincs API kulcs';
+                document.getElementById('apiKeyStatus').style.color = '#ff9800';
+            }
+        }
+        
+        // AI API hívása
+        async function askAI(query) {
+            const apiKey = getApiKey();
+            const aiLoading = document.getElementById('aiLoading');
+            const aiResponse = document.getElementById('aiResponse');
+            const aiResponseText = document.getElementById('aiResponseText');
+            
+            if (!apiKey) {
+                aiLoading.innerHTML = '⚠️ Kérlek add meg az OpenAI API kulcsodat a fenti mezőben!';
+                return;
+            }
+            
+            try {
+                // Kontextus összeállítása a jegyzet tartalmából
+                const context = pdfText.map(p => `[${p.page}. oldal]: ${p.text.substring(0, 500)}`).join('\n\n');
+                
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `Te egy segítőkész tanulmányi asszisztens vagy. A felhasználónak van egy jegyzete a következő tartalommal. Válaszolj a kérdésére magyarul, a jegyzet kontextusát figyelembe véve, de ha a jegyzetben nincs elég információ, akkor adj általános választ a témában.
+
+Jegyzet kivonata:
+${context.substring(0, 8000)}`
+                            },
+                            {
+                                role: 'user',
+                                content: query
+                            }
+                        ],
+                        max_tokens: 1000,
+                        temperature: 0.7
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'API hiba');
+                }
+                
+                const data = await response.json();
+                const aiText = data.choices[0].message.content;
+                
+                aiLoading.style.display = 'none';
+                aiResponse.style.display = 'block';
+                aiResponseText.textContent = aiText;
+                
+            } catch (error) {
+                console.error('AI API hiba:', error);
+                aiLoading.innerHTML = `❌ Hiba: ${error.message}`;
+            }
+        }
+        
+        // AI hívása kontextussal (releváns oldalakkal)
+        async function askAIWithContext(query, results, activeTetel = null) {
+            const apiKey = getApiKey();
+            const aiLoading = document.getElementById('aiLoading');
+            const aiResponse = document.getElementById('aiResponse');
+            const aiResponseText = document.getElementById('aiResponseText');
+            const relatedPages = document.getElementById('relatedPages');
+            
+            if (!apiKey) {
+                aiLoading.innerHTML = '⚠️ Kérlek add meg az OpenAI API kulcsodat a fenti mezőben!';
+                return;
+            }
+            
+            try {
+                // Releváns oldalak tartalmának összeállítása
+                let relevantContext = '';
+                if (results.length > 0) {
+                    relevantContext = results.map(r => `[${r.page}. oldal - potenciálisan releváns]:\n${r.text}`).join('\n\n---\n\n');
+                }
+                
+                // Ha nincs releváns találat, a teljes jegyzet kivonatát adjuk
+                if (!relevantContext) {
+                    relevantContext = pdfText.map(p => `[${p.page}. oldal]: ${p.text.substring(0, 300)}`).join('\n\n');
+                }
+                
+                // Tétel specifikus prompt
+                let tetelContext = '';
+                if (activeTetel) {
+                    tetelContext = `
+FONTOS: A felhasználó a "${activeTetel.id}. tétel: ${activeTetel.cim}" témakörében kérdez!
+Kulcsszavak ehhez a tételhez: ${activeTetel.kulcsszavak.join(', ')}
+
+A válaszodnak KIFEJEZETTEN ehhez a vizsgatételhez kell kapcsolódnia. Ha a kérdés általános, akkor is a "${activeTetel.cim}" kontextusában válaszolj.
+`;
+                }
+                
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `Te egy segítőkész tanulmányi asszisztens vagy, aki a "Közelítő és szimbolikus számítások" tantárgy vizsgatételei alapján válaszol kérdésekre.
+${tetelContext}
+FELADATOD:
+1. Elemezd a felhasználó kérdését
+2. Nézd meg a jegyzet releváns részeit
+3. Ha a jegyzetben MEGTALÁLHATÓ a válasz, akkor onnan válaszolj és jelöld meg melyik oldalon található (pl. "A jegyzet X. oldalán...")
+4. Ha a jegyzetben NINCS ELÉG információ a kérdés megválaszolásához, akkor adj részletes, vizsga-szintű magyarázatot a saját tudásod alapján
+5. Mindig magyarul válaszolj
+6. Légy informatív, részletes és vizsga-orientált
+7. Ha képlet kell, írd le szövegesen vagy használj egyszerű jelölést
+
+A válasz végén jelezd:
+- 📖 "Forrás: jegyzet" - ha a jegyzetből válaszoltál
+- 🌐 "Forrás: általános tudás" - ha saját tudásodból válaszoltál
+
+Jegyzet releváns részei:
+${relevantContext.substring(0, 12000)}`
+                            },
+                            {
+                                role: 'user',
+                                content: query
+                            }
+                        ],
+                        max_tokens: 2000,
+                        temperature: 0.7
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'API hiba');
+                }
+                
+                const data = await response.json();
+                const aiText = data.choices[0].message.content;
+                
+                aiLoading.style.display = 'none';
+                aiResponse.style.display = 'block';
+                aiResponseText.textContent = aiText;
+                
+                // Ha vannak kapcsolódó oldalak, mutassuk meg őket
+                if (relatedPages && results.length > 0) {
+                    relatedPages.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('AI API hiba:', error);
+                aiLoading.innerHTML = `❌ Hiba: ${error.message}`;
+            }
+        }
+
+        // Tesseract OCR worker inicializálása
+        async function initOCR() {
+            ocrWorker = await Tesseract.createWorker('hun', 1, {
+                logger: m => {
+                    if (m.status === 'recognizing text' && totalPages > 0) {
+                        // Kombinálja az oldal progresst az OCR progressel
+                        const pageProgress = (currentPage - 1) / totalPages;
+                        const ocrProgress = m.progress / totalPages;
+                        const totalProgress = (pageProgress + ocrProgress) * 100;
+                        updateProgress(totalProgress, `OCR feldolgozás: ${currentPage}/${totalPages} oldal (${Math.round(m.progress * 100)}%)`);
+                    }
+                }
+            });
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+
+        // PDF oldal képpé renderelése OCR-hez
+        async function renderPageToImage(pageNum, scale = 2) {
+            const page = await pdfDocument.getPage(pageNum);
+            const viewport = page.getViewport({ scale });
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+            
+            return canvas;
+        }
+
+        // PDF betöltése
+        const OCR_CACHE_KEY = 'koszikicsi_ocr_cache';
+        
+        // Mentett OCR adat betöltése
+        function loadCachedOCR() {
+            try {
+                const cached = localStorage.getItem(OCR_CACHE_KEY);
+                if (cached) {
+                    return JSON.parse(cached);
+                }
+            } catch (e) {
+                console.error('Cache olvasási hiba:', e);
+            }
+            return null;
+        }
+        
+        // OCR adat mentése
+        function saveCachedOCR(data) {
+            try {
+                localStorage.setItem(OCR_CACHE_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.error('Cache mentési hiba:', e);
+            }
+        }
+        
+        // Cache törlése (ha szükséges)
+        function clearOCRCache() {
+            localStorage.removeItem(OCR_CACHE_KEY);
+            location.reload();
+        }
+        
+        async function loadPDF() {
+            const pdfPath = 'sources/koszikicsi_pp.pdf';
+            
+            try {
+                // Először ellenőrizzük a cache-t
+                const cachedData = loadCachedOCR();
+                
+                if (cachedData && cachedData.pdfText && cachedData.pdfText.length > 0) {
+                    // Van mentett adat, használjuk azt
+                    document.getElementById('pdfInfo').innerHTML = 
+                        '<span class="spinner"></span> Mentett OCR adat betöltése...';
+                    
+                    pdfText = cachedData.pdfText;
+                    totalPages = cachedData.totalPages;
+                    
+                    // PDF-et is be kell tölteni az oldal megjelenítéshez
+                    pdfDocument = await pdfjsLib.getDocument(pdfPath).promise;
+                    
+                    pdfLoaded = true;
+                    document.getElementById('pdfInfo').innerHTML = 
+                        `✅ PDF betöltve mentett OCR adatból: <strong>koszikicsi_pp.pdf</strong> (${totalPages} oldal)
+                        <button onclick="clearOCRCache()" style="margin-left: 10px; padding: 5px 10px; border-radius: 10px; border: none; background: #ff9800; color: white; cursor: pointer; font-size: 12px;">🔄 OCR újrafuttatás</button>`;
+                    document.getElementById('pdfInfo').style.background = '#e8f5e9';
+                    document.getElementById('pdfInfo').style.color = '#388e3c';
+                    return;
+                }
+                
+                // Nincs cache, OCR futtatása
+                document.getElementById('pdfInfo').innerHTML = 
+                    '<span class="spinner"></span> PDF betöltése és OCR inicializálása...';
+                
+                // OCR és PDF párhuzamos betöltése
+                const [pdf] = await Promise.all([
+                    pdfjsLib.getDocument(pdfPath).promise,
+                    initOCR()
+                ]);
+                
+                pdfDocument = pdf;
+                totalPages = pdf.numPages;
+                
+                document.getElementById('pdfInfo').innerHTML = 
+                    `<span class="spinner"></span> OCR feldolgozás folyamatban... (${totalPages} oldal)`;
+                document.getElementById('ocrProgress').style.display = 'block';
+                
+                // OCR minden oldalon
+                for (let i = 1; i <= totalPages; i++) {
+                    currentPage = i;
+                    updateProgress((i - 1) / totalPages * 100, `OCR feldolgozás: ${i}/${totalPages} oldal...`);
+                    
+                    const canvas = await renderPageToImage(i);
+                    const { data: { text } } = await ocrWorker.recognize(canvas);
+                    
+                    pdfText.push({
+                        page: i,
+                        text: text
+                    });
+                }
+                
+                // Mentés localStorage-be
+                saveCachedOCR({
+                    pdfText: pdfText,
+                    totalPages: totalPages,
+                    timestamp: Date.now()
+                });
+                
+                updateProgress(100, 'Kész!');
+                
+                pdfLoaded = true;
+                document.getElementById('ocrProgress').style.display = 'none';
+                document.getElementById('pdfInfo').innerHTML = 
+                    `✅ PDF sikeresen feldolgozva OCR-rel: <strong>koszikicsi_pp.pdf</strong> (${totalPages} oldal)
+                    <button onclick="clearOCRCache()" style="margin-left: 10px; padding: 5px 10px; border-radius: 10px; border: none; background: #ff9800; color: white; cursor: pointer; font-size: 12px;">🔄 OCR újrafuttatás</button>`;
+                document.getElementById('pdfInfo').style.background = '#e8f5e9';
+                document.getElementById('pdfInfo').style.color = '#388e3c';
+                
+            } catch (error) {
+                console.error('PDF/OCR hiba:', error);
+                document.getElementById('ocrProgress').style.display = 'none';
+                document.getElementById('pdfInfo').innerHTML = 
+                    `❌ Hiba: ${error.message}`;
+                document.getElementById('pdfInfo').style.background = '#ffebee';
+                document.getElementById('pdfInfo').style.color = '#c62828';
+            }
+        }
+
+        // Keresés
+        function searchInPDF(query) {
+            if (!pdfLoaded) {
+                setStatus('A PDF még nem töltődött be!');
+                return;
+            }
+
+            if (!query.trim()) {
+                setStatus('Kérlek adj meg keresési kifejezést!');
+                return;
+            }
+
+            // Tétel felismerése a kérdésből
+            const detectedTetel = detectTetelFromQuery(query);
+            if (detectedTetel && !selectedTetel) {
+                selectTetel(detectedTetel.id);
+            }
+            
+            // Aktív tétel (kézzel választott vagy automatikusan felismert)
+            const activeTetel = selectedTetel || detectedTetel;
+
+            // Kulcsszavak keresése a releváns oldalak megtalálásához
+            const results = [];
+            const queryLower = query.toLowerCase();
+            let queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
+            
+            // Ha van aktív tétel, adjuk hozzá annak kulcsszavait
+            if (activeTetel) {
+                queryWords = [...queryWords, ...activeTetel.kulcsszavak.map(k => k.toLowerCase())];
+                // Távolítsuk el a "tétel" és számokat a kereső szavakból
+                queryWords = queryWords.filter(w => w !== 'tétel' && !/^\d+$/.test(w));
+            }
+
+            pdfText.forEach(pageData => {
+                const textLower = pageData.text.toLowerCase();
+                
+                // Teljes kifejezés keresése (tétel nélkül)
+                const cleanQuery = query.replace(/\d+\.\s*tétel/gi, '').replace(/tétel\s*\d+/gi, '').trim().toLowerCase();
+                if (cleanQuery && textLower.includes(cleanQuery)) {
+                    results.push({
+                        page: pageData.page,
+                        text: pageData.text,
+                        matchType: 'exact'
+                    });
+                } 
+                // Szavankénti keresés (beleértve a tétel kulcsszavait)
+                else if (queryWords.some(word => textLower.includes(word))) {
+                    results.push({
+                        page: pageData.page,
+                        text: pageData.text,
+                        matchType: 'partial'
+                    });
+                }
+            });
+
+            // Mindig az AI válaszol, a találatokat kontextusként használva
+            displayResultsWithAI(results, query, activeTetel);
+        }
+
+        // Eredmények megjelenítése AI válasszal
+        function displayResultsWithAI(results, query, activeTetel = null) {
+            const resultsBox = document.getElementById('resultsBox');
+            const resultsDiv = document.getElementById('results');
+            const resultsTitle = document.getElementById('resultsTitle');
+
+            resultsBox.style.display = 'block';
+            
+            // Tétel info megjelenítése a címben
+            let titleHtml = `Kérdés: "<strong>${escapeHtml(query)}</strong>"`;
+            if (activeTetel) {
+                titleHtml += ` <span style="color: #e65100; font-size: 14px;">(${activeTetel.id}. tétel: ${activeTetel.cim})</span>`;
+            }
+            resultsTitle.innerHTML = titleHtml;
+            
+            // AI válasz szekció
+            let html = `
+                <div class="ai-loading" id="aiLoading">
+                    <span class="spinner"></span> Válasz keresése ${activeTetel ? `a ${activeTetel.id}. tételben` : 'a jegyzetben'} és AI segítséggel...
+                </div>
+                <div class="ai-response" id="aiResponse" style="display: none;">
+                    <div class="ai-response-header">🤖 AI Válasz${activeTetel ? ` - ${activeTetel.id}. tétel` : ''}</div>
+                    <div class="ai-response-text" id="aiResponseText"></div>
+                </div>
+            `;
+            
+            // Ha vannak találatok, azokat is megjelenítjük később megtekintésre
+            if (results.length > 0) {
+                html += `
+                    <div id="relatedPages" style="display: none; margin-top: 20px;">
+                        <div style="font-weight: bold; color: #667eea; margin-bottom: 15px;">📚 Kapcsolódó oldalak a jegyzetben (${results.length} db):</div>
+                        ${results.map(result => {
+                            const canvasId = `canvas-page-${result.page}`;
+                            const excerpt = getExcerpt(result.text, query, 100);
+                            const highlightedExcerpt = highlightText(excerpt, query);
+                            
+                            return `
+                                <div class="result-item">
+                                    <div class="result-page">📄 ${result.page}. oldal</div>
+                                    <div class="result-text">${highlightedExcerpt}</div>
+                                    <button class="preview-toggle" onclick="togglePreview(${result.page}, '${canvasId}')">
+                                        📖 Oldal megjelenítése
+                                    </button>
+                                    <div class="result-preview" id="preview-${result.page}" style="display: none;">
+                                        <canvas id="${canvasId}"></canvas>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
+            
+            // AI hívása a találatokkal és a tétellel együtt
+            askAIWithContext(query, results, activeTetel);
+        }
+
+        // Kivonat készítése
+        function getExcerpt(text, query, contextLength) {
+            const lowerText = text.toLowerCase();
+            const lowerQuery = query.toLowerCase();
+            const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2);
+            
+            let index = lowerText.indexOf(lowerQuery);
+            
+            if (index === -1) {
+                for (const word of queryWords) {
+                    index = lowerText.indexOf(word);
+                    if (index !== -1) break;
+                }
+            }
+
+            if (index === -1) return text.substring(0, contextLength * 2) + '...';
+
+            const start = Math.max(0, index - contextLength);
+            const end = Math.min(text.length, index + query.length + contextLength);
+            
+            let excerpt = text.substring(start, end);
+            
+            if (start > 0) excerpt = '...' + excerpt;
+            if (end < text.length) excerpt = excerpt + '...';
+            
+            return excerpt;
+        }
+
+        // Szöveg kiemelése
+        function highlightText(text, query) {
+            const words = query.split(/\s+/).filter(w => w.length > 2);
+            let result = escapeHtml(text);
+            
+            words.forEach(word => {
+                const regex = new RegExp(`(${escapeRegExp(word)})`, 'gi');
+                result = result.replace(regex, '<mark>$1</mark>');
+            });
+            
+            return result;
+        }
+
+        // HTML escape
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // RegExp escape
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // PDF oldal renderelése
+        async function renderPage(pageNum, canvasId) {
+            if (!pdfDocument) return;
+            
+            const page = await pdfDocument.getPage(pageNum);
+            const scale = 1.5;
+            const viewport = page.getViewport({ scale });
+            
+            const canvas = document.getElementById(canvasId);
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+        }
+
+        // Előnézet megjelenítése/elrejtése
+        const renderedPages = new Set();
+        
+        async function togglePreview(pageNum, canvasId) {
+            const previewDiv = document.getElementById(`preview-${pageNum}`);
+            const isHidden = previewDiv.style.display === 'none';
+            
+            if (isHidden) {
+                previewDiv.style.display = 'block';
+                if (!renderedPages.has(pageNum)) {
+                    await renderPage(pageNum, canvasId);
+                    renderedPages.add(pageNum);
+                }
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        }
+
+        // Státusz beállítása
+        function setStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Hangfelismerés
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+        let silenceTimeout = null;
+        let lastTranscript = '';
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'hu-HU';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isListening = true;
+                lastTranscript = '';
+                document.getElementById('voiceBtn').classList.add('listening');
+                setStatus('🎤 Figyelek... Beszélj most!');
+            };
+
+            recognition.onresult = (event) => {
+                // Összegyűjti az összes felismert szöveget
+                let transcript = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                
+                document.getElementById('searchInput').value = transcript;
+                lastTranscript = transcript;
+                
+                // Töröljük az előző timeout-ot
+                if (silenceTimeout) {
+                    clearTimeout(silenceTimeout);
+                }
+                
+                // 2 másodperc csend után automatikus keresés
+                silenceTimeout = setTimeout(() => {
+                    if (lastTranscript.trim()) {
+                        setStatus('⏱️ Csend észlelve, keresés...');
+                        recognition.stop();
+                        searchInPDF(lastTranscript);
+                    }
+                }, 2000);
+                
+                setStatus('🎤 Hallgatlak... (2mp csend = keresés)');
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Hangfelismerési hiba:', event.error);
+                if (event.error !== 'no-speech') {
+                    setStatus('❌ Hiba: ' + event.error);
+                }
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                if (silenceTimeout) clearTimeout(silenceTimeout);
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                if (silenceTimeout) clearTimeout(silenceTimeout);
+            };
+        }
+
+        // Event listeners
+        document.getElementById('voiceBtn').addEventListener('click', () => {
+            if (!SpeechRecognition) {
+                setStatus('❌ A böngésződ nem támogatja a hangfelismerést. Használj Chrome-ot!');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const query = document.getElementById('searchInput').value;
+            searchInPDF(query);
+        });
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = document.getElementById('searchInput').value;
+                searchInPDF(query);
+            }
+        });
+
+        // Inicializálás
+        loadTetelek();
+        loadPDF();
+        loadApiKeyStatus();
+    </script>
+</body>
+</html>

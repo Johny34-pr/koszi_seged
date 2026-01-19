@@ -1,0 +1,208 @@
+{
+  "subject": "Közelítő és szimbolikus számítások",
+  "tetelek": [
+    {
+      "id": 1,
+      "cim": "A számítógépes hiba különböző fajtái",
+      "kulcsszavak": ["hiba", "kerekítési hiba", "csonkolási hiba", "modellhiba", "adathiba", "numerikus hiba"],
+      "pipirelPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 2,
+      "cim": "Számítógépes számábrázolás és kerekítés",
+      "kulcsszavak": ["lebegőpontos", "mantissza", "exponens", "IEEE 754", "kerekítés", "számábrázolás", "normalizált", "gépi szám"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 3,
+      "cim": "Numerikus stabilitás, a hiba továbbterjedése, kondíciószám",
+      "kulcsszavak": ["stabilitás", "instabilitás", "kondíciószám", "rosszul kondicionált", "jól kondicionált", "hiba terjedése"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 4,
+      "cim": "Intervallum aritmetika",
+      "kulcsszavak": ["intervallum", "alsó határ", "felső határ", "intervallum művelet", "hibakorlát"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 5,
+      "cim": "Automatikus differenciálás",
+      "kulcsszavak": ["automatikus differenciálás", "forward mode", "backward mode", "duális szám", "derivált", "lánc szabály"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 6,
+      "cim": "Lineáris egyenletrendszerek megoldása Gauss eliminációval",
+      "kulcsszavak": ["Gauss", "elimináció", "lineáris egyenletrendszer", "pivotálás", "háromszög mátrix", "visszahelyettesítés"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 7,
+      "cim": "LU felbontás, eliminációs mátrixok, főelemkiválasztás",
+      "kulcsszavak": ["LU", "felbontás", "faktorizáció", "eliminációs mátrix", "főelemkiválasztás", "permutáció"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 8,
+      "cim": "Mátrixinvertálás, mátrixnormák, mátrixok kondíciószáma",
+      "kulcsszavak": ["inverz", "mátrixnorma", "spektrálnorma", "Frobenius", "kondíciószám", "cond"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 9,
+      "cim": "Cholesky felbontás, QR ortogonális felbontás",
+      "kulcsszavak": ["Cholesky", "QR", "ortogonális", "Gram-Schmidt", "Householder", "Givens", "pozitív definit"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 10,
+      "cim": "Mátrixok sajátértékei, sajátvektorai, a sajátértékek korlátai, a hatványmódszer",
+      "kulcsszavak": ["sajátérték", "sajátvektor", "spektrum", "hatványmódszer", "domináns sajátérték", "Gershgorin"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 11,
+      "cim": "A mátrixok típusai, hasonlósági transzformáció",
+      "kulcsszavak": ["szimmetrikus", "ortogonális", "unitér", "hasonlóság", "diagonalizálható", "Jordan"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 12,
+      "cim": "A sajátértékek és a sajátvektorok kondícionáltsága",
+      "kulcsszavak": ["sajátérték kondíció", "érzékenység", "perturbáció", "Bauer-Fike"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 13,
+      "cim": "LR transzformáció",
+      "kulcsszavak": ["LR", "QR iteráció", "sajátérték algoritmus", "shift", "konvergencia"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 14,
+      "cim": "Lineáris egyenletrendszerek iterációs módszerei, a Jacobi iteráció",
+      "kulcsszavak": ["Jacobi", "iteráció", "iterációs módszer", "diagonális", "fixpont"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 15,
+      "cim": "Lineáris egyenletrendszerek iterációs módszerei konvergenciája",
+      "kulcsszavak": ["konvergencia", "spektrálsugár", "iterációs mátrix", "kontrakció"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 16,
+      "cim": "A Gauss-Seidel iteráció, mátrixok reguláris szétvágásai",
+      "kulcsszavak": ["Gauss-Seidel", "SOR", "relaxáció", "szétvágás", "splitting"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 17,
+      "cim": "Konjugált gradiens módszer",
+      "kulcsszavak": ["konjugált gradiens", "CG", "Krylov", "előkondicionálás", "PCG"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 18,
+      "cim": "Lineáris egyenletek iterációs módszerei a Matlabban",
+      "kulcsszavak": ["Matlab", "pcg", "gmres", "bicgstab", "sparse"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 19,
+      "cim": "Polinomok zérushelyei, Horner elrendezés, Ruffini sorozat, iterált Horner elrendezés",
+      "kulcsszavak": ["polinom", "zérushely", "gyök", "Horner", "Ruffini", "kiértékelés"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 20,
+      "cim": "Polinomok kezelése a Matlabban",
+      "kulcsszavak": ["Matlab", "polyval", "roots", "conv", "deconv", "polyder"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 21,
+      "cim": "Függvényközelítések, Lagrange interpoláció",
+      "kulcsszavak": ["interpoláció", "Lagrange", "alapppolinom", "közelítés", "approximáció"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 22,
+      "cim": "A Lagrange interpoláció hibája, interpoláció a Matlabban",
+      "kulcsszavak": ["interpolációs hiba", "Runge jelenség", "Chebyshev", "interp1", "Matlab"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 23,
+      "cim": "Newton módszer, szelőmódszer, húrmódszer",
+      "kulcsszavak": ["Newton", "Newton-Raphson", "szelő", "húr", "gyökkeresés", "iteráció", "konvergencia"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 24,
+      "cim": "Legkisebb négyzetek módszere",
+      "kulcsszavak": ["legkisebb négyzetek", "regresszió", "illesztés", "túlhatározott", "normálegyenlet"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 25,
+      "cim": "Spline közelítés, megvalósítása a Matlabban",
+      "kulcsszavak": ["spline", "köbös spline", "cubic spline", "csomópont", "spline Matlab"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 26,
+      "cim": "Numerikus integrálás, kvadratúra-formulák",
+      "kulcsszavak": ["integrálás", "kvadratúra", "numerikus integrál", "téglány", "trapéz", "Simpson"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 27,
+      "cim": "Interpolációs kvadratúra-formulák, ezek hibája",
+      "kulcsszavak": ["interpolációs kvadratúra", "kvadratúra hiba", "pontosság", "polinom fokszám"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 28,
+      "cim": "Véges differenciák, Newton-Cotes formulák",
+      "kulcsszavak": ["véges differencia", "Newton-Cotes", "előre differencia", "hátra differencia", "centrális"],
+      "relatedPDFPages": [],
+      "content": ""
+    },
+    {
+      "id": 29,
+      "cim": "Numerikus integrálás a Matlabban",
+      "kulcsszavak": ["Matlab", "integral", "quad", "trapz", "cumtrapz"],
+      "relatedPDFPages": [],
+      "content": ""
+    }
+  ]
+}
